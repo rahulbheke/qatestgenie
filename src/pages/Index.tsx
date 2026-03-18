@@ -12,6 +12,12 @@ const legend = [
   { label: "P3 / Low", color: "bg-muted-foreground", desc: "Optional — minimal impact" },
 ];
 
+export type Validity = "valid" | "invalid" | null;
+export interface CardMeta {
+  validity: Validity;
+  feedback: string;
+}
+
 const Index = () => {
   const [feature, setFeature] = useState("");
   const [results, setResults] = useState<GeneratedTests | null>(null);
@@ -20,7 +26,15 @@ const Index = () => {
   const [uploadedFeatures, setUploadedFeatures] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [cardMeta, setCardMeta] = useState<Record<string, CardMeta>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const updateCardMeta = (id: string, update: Partial<CardMeta>) => {
+    setCardMeta((prev) => ({
+      ...prev,
+      [id]: { validity: null, feedback: "", ...prev[id], ...update },
+    }));
+  };
 
   const handleGenerate = () => {
     const manualFeatures = feature.trim() ? [feature.trim()] : [];
