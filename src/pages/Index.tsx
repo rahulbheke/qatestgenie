@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import TestCaseColumn from "@/components/TestCaseColumn";
 import { generateTestCases, formatAllTestCases, type GeneratedTests } from "@/lib/generateTestCases";
-import { FlaskConical, Sparkles, ClipboardCopy, Check, Info } from "lucide-react";
+import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 
 const legend = [
   { label: "P0 / Critical", color: "bg-destructive", desc: "Must test — blocks release" },
@@ -33,6 +34,29 @@ const Index = () => {
     await navigator.clipboard.writeText(formatAllTestCases(results));
     setAllCopied(true);
     setTimeout(() => setAllCopied(false), 1500);
+  };
+
+  const handleExportExcel = () => {
+    if (!results) return;
+    const allCases = [
+      ...results.positive.map((tc) => ({ ...tc, category: "Happy Path" })),
+      ...results.negative.map((tc) => ({ ...tc, category: "Error Handling" })),
+      ...results.edge.map((tc) => ({ ...tc, category: "Boundary" })),
+    ];
+    const rows = allCases.map((tc) => ({
+      ID: tc.id,
+      Category: tc.category,
+      Title: tc.title,
+      Priority: tc.priority,
+      Severity: tc.severity,
+      Steps: tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
+      "Expected Result": tc.expected,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 50 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
+    XLSX.writeFile(wb, "test-cases.xlsx");
   };
 
   return (
@@ -90,10 +114,16 @@ const Index = () => {
                   Legend
                 </button>
               </div>
-              <Button variant="outline" size="sm" onClick={handleCopyAll} className="gap-1.5">
-                {allCopied ? <Check className="h-3.5 w-3.5 text-positive" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
-                {allCopied ? "Copied!" : "Copy All"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  Export Excel
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCopyAll} className="gap-1.5">
+                  {allCopied ? <Check className="h-3.5 w-3.5 text-positive" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+                  {allCopied ? "Copied!" : "Copy All"}
+                </Button>
+              </div>
             </div>
 
             {/* Legend */}
