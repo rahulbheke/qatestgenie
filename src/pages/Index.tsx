@@ -19,6 +19,7 @@ const Index = () => {
   const [showLegend, setShowLegend] = useState(false);
   const [uploadedFeatures, setUploadedFeatures] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = () => {
