@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, ThumbsUp, ThumbsDown, MessageSquare, X } from "lucide-react";
 import type { TestCase } from "@/lib/generateTestCases";
 import { formatTestCase } from "@/lib/generateTestCases";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,10 @@ const severityStyles: Record<string, string> = {
 
 const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
   const [copied, setCopied] = useState(false);
+  const [validity, setValidity] = useState<"valid" | "invalid" | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(formatTestCase(testCase));
@@ -25,11 +29,37 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const handleSaveFeedback = () => {
+    if (!feedback.trim()) return;
+    setFeedbackSaved(true);
+    setShowFeedback(false);
+  };
+
+  const borderByValidity =
+    validity === "valid"
+      ? "border-positive/40"
+      : validity === "invalid"
+        ? "border-destructive/40"
+        : "border-border";
+
   return (
     <div
-      className="bg-card border border-border rounded-lg p-5 opacity-0 animate-fade-slide-up hover:border-primary/20 transition-colors group relative"
+      className={cn(
+        "bg-card border rounded-lg p-5 opacity-0 animate-fade-slide-up hover:border-primary/20 transition-all group relative",
+        borderByValidity
+      )}
       style={{ animationDelay: `${index * 80}ms` }}
     >
+      {/* Validity ribbon */}
+      {validity && (
+        <div
+          className={cn(
+            "absolute top-0 left-0 right-0 h-0.5 rounded-t-lg",
+            validity === "valid" ? "bg-positive" : "bg-destructive"
+          )}
+        />
+      )}
+
       {/* Header row */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex-1 min-w-0">
@@ -47,7 +77,12 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
 
       {/* Badges */}
       <div className="flex items-center gap-2 mb-3">
-        <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border", severityStyles[testCase.severity])}>
+        <span
+          className={cn(
+            "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border",
+            severityStyles[testCase.severity]
+          )}
+        >
           {testCase.severity}
         </span>
         <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold font-mono-code bg-secondary text-secondary-foreground border border-border">
@@ -69,10 +104,81 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
       </div>
 
       {/* Expected */}
-      <div>
+      <div className="mb-4">
         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1.5">Expected Result</p>
         <p className="text-sm font-mono-code text-foreground/70">{testCase.expected}</p>
       </div>
+
+      {/* Actions bar */}
+      <div className="flex items-center gap-1 pt-3 border-t border-border">
+        <button
+          onClick={() => setValidity(validity === "valid" ? null : "valid")}
+          className={cn(
+            "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
+            validity === "valid"
+              ? "bg-positive/15 text-positive"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          )}
+          title="Mark as valid"
+        >
+          <ThumbsUp className="h-3 w-3" />
+          Valid
+        </button>
+        <button
+          onClick={() => setValidity(validity === "invalid" ? null : "invalid")}
+          className={cn(
+            "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
+            validity === "invalid"
+              ? "bg-destructive/15 text-destructive"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          )}
+          title="Mark as not valid"
+        >
+          <ThumbsDown className="h-3 w-3" />
+          Not Valid
+        </button>
+        <div className="flex-1" />
+        <button
+          onClick={() => setShowFeedback(!showFeedback)}
+          className={cn(
+            "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
+            feedbackSaved
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          )}
+          title="Add feedback"
+        >
+          <MessageSquare className="h-3 w-3" />
+          {feedbackSaved ? "Feedback added" : "Feedback"}
+        </button>
+      </div>
+
+      {/* Feedback input */}
+      {showFeedback && (
+        <div className="mt-3 space-y-2 animate-fade-slide-up" style={{ animationDelay: "0ms" }}>
+          <textarea
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            placeholder="Describe what's wrong or suggest improvements…"
+            className="w-full min-h-[72px] rounded-md border border-input bg-background p-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/50 resize-y font-mono-code"
+          />
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowFeedback(false)}
+              className="px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveFeedback}
+              disabled={!feedback.trim()}
+              className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              Save Feedback
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
