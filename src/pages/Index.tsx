@@ -31,10 +31,7 @@ const Index = () => {
     setResults(mergeGeneratedTests(allResults));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       const data = new Uint8Array(evt.target?.result as ArrayBuffer);
@@ -42,7 +39,6 @@ const Index = () => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet);
 
-      // Look for a column that contains features/requirements
       const featureKeys = Object.keys(rows[0] || {});
       const key =
         featureKeys.find((k) =>
@@ -58,8 +54,32 @@ const Index = () => {
       }
     };
     reader.readAsArrayBuffer(file);
-    // Reset input so the same file can be re-uploaded
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
     e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && /\.(xlsx|xls|csv)$/i.test(file.name)) {
+      processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleClearFile = () => {
