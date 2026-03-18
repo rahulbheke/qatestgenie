@@ -36,6 +36,29 @@ const Index = () => {
     setTimeout(() => setAllCopied(false), 1500);
   };
 
+  const handleExportExcel = () => {
+    if (!results) return;
+    const allCases = [
+      ...results.positive.map((tc) => ({ ...tc, category: "Happy Path" })),
+      ...results.negative.map((tc) => ({ ...tc, category: "Error Handling" })),
+      ...results.edge.map((tc) => ({ ...tc, category: "Boundary" })),
+    ];
+    const rows = allCases.map((tc) => ({
+      ID: tc.id,
+      Category: tc.category,
+      Title: tc.title,
+      Priority: tc.priority,
+      Severity: tc.severity,
+      Steps: tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
+      "Expected Result": tc.expected,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 50 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
+    XLSX.writeFile(wb, "test-cases.xlsx");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
