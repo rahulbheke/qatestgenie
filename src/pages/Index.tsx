@@ -17,10 +17,53 @@ const Index = () => {
   const [results, setResults] = useState<GeneratedTests | null>(null);
   const [allCopied, setAllCopied] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [uploadedFeatures, setUploadedFeatures] = useState<string[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = () => {
-    if (!feature.trim()) return;
-    setResults(generateTestCases(feature));
+    const manualFeatures = feature.trim() ? [feature.trim()] : [];
+    const allFeatures = [...manualFeatures, ...uploadedFeatures];
+    if (allFeatures.length === 0) return;
+
+    const allResults = allFeatures.map((f) => generateTestCases(f));
+    setResults(mergeGeneratedTests(allResults));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet);
+
+      // Look for a column that contains features/requirements
+      const featureKeys = Object.keys(rows[0] || {});
+      const key =
+        featureKeys.find((k) =>
+          /feature|requirement|description|title|name|story/i.test(k)
+        ) || featureKeys[0];
+
+      if (key) {
+        const features = rows
+          .map((row) => String(row[key] || "").trim())
+          .filter(Boolean);
+        setUploadedFeatures(features);
+        setFileName(file.name);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    // Reset input so the same file can be re-uploaded
+    e.target.value = "";
+  };
+
+  const handleClearFile = () => {
+    setUploadedFeatures([]);
+    setFileName(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
