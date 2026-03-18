@@ -2,12 +2,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import TestCaseColumn from "@/components/TestCaseColumn";
 import { generateTestCases, formatAllTestCases, type GeneratedTests } from "@/lib/generateTestCases";
-import { FlaskConical, Sparkles, ClipboardCopy, Check } from "lucide-react";
+import { FlaskConical, Sparkles, ClipboardCopy, Check, Info } from "lucide-react";
+
+const legend = [
+  { label: "P0 / Critical", color: "bg-destructive", desc: "Must test — blocks release" },
+  { label: "P1 / High", color: "bg-warning", desc: "Should test — major impact" },
+  { label: "P2 / Medium", color: "bg-primary", desc: "Nice to test — moderate impact" },
+  { label: "P3 / Low", color: "bg-muted-foreground", desc: "Optional — minimal impact" },
+];
 
 const Index = () => {
   const [feature, setFeature] = useState("");
   const [results, setResults] = useState<GeneratedTests | null>(null);
   const [allCopied, setAllCopied] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const handleGenerate = () => {
     if (!feature.trim()) return;
@@ -68,15 +76,47 @@ const Index = () => {
       {results && (
         <section className="container max-w-6xl pb-16 px-4 sm:px-6">
           <div className="border-t border-border pt-10">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-muted-foreground">
-                {results.positive.length + results.negative.length + results.edge.length} test cases generated
-              </p>
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {results.positive.length + results.negative.length + results.edge.length} test cases generated
+                </p>
+                <button
+                  onClick={() => setShowLegend(!showLegend)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                  Legend
+                </button>
+              </div>
               <Button variant="outline" size="sm" onClick={handleCopyAll} className="gap-1.5">
                 {allCopied ? <Check className="h-3.5 w-3.5 text-positive" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
                 {allCopied ? "Copied!" : "Copy All"}
               </Button>
             </div>
+
+            {/* Legend */}
+            {showLegend && (
+              <div className="mb-6 p-4 rounded-lg border border-border bg-card/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2 mb-1">
+                  <p className="text-xs font-semibold text-heading uppercase tracking-widest">Priority & Severity Key</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Use 👍 / 👎 on each card to mark validity. Click <strong>Feedback</strong> to suggest changes.
+                  </p>
+                </div>
+                {legend.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2.5">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${item.color}`} />
+                    <div>
+                      <span className="text-xs font-medium text-foreground">{item.label}</span>
+                      <span className="text-xs text-muted-foreground ml-1.5">— {item.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <TestCaseColumn title="Happy Path" type="positive" cases={results.positive} />
               <TestCaseColumn title="Error Handling" type="negative" cases={results.negative} />
