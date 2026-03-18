@@ -270,9 +270,9 @@ const Index = () => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <TestCaseColumn title="Happy Path" type="positive" cases={results.positive} />
-              <TestCaseColumn title="Error Handling" type="negative" cases={results.negative} />
-              <TestCaseColumn title="Boundary" type="edge" cases={results.edge} />
+              <TestCaseColumn title="Happy Path" type="positive" cases={results.positive} cardMeta={cardMeta} onUpdateMeta={updateCardMeta} />
+              <TestCaseColumn title="Error Handling" type="negative" cases={results.negative} cardMeta={cardMeta} onUpdateMeta={updateCardMeta} />
+              <TestCaseColumn title="Boundary" type="edge" cases={results.edge} cardMeta={cardMeta} onUpdateMeta={updateCardMeta} />
             </div>
           </div>
         </section>
