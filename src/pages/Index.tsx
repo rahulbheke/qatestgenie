@@ -121,17 +121,22 @@ const Index = () => {
       ...results.negative.map((tc) => ({ ...tc, category: "Error Handling" })),
       ...results.edge.map((tc) => ({ ...tc, category: "Boundary" })),
     ];
-    const rows = allCases.map((tc) => ({
-      ID: tc.id,
-      Category: tc.category,
-      Title: tc.title,
-      Priority: tc.priority,
-      Severity: tc.severity,
-      Steps: tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
-      "Expected Result": tc.expected,
-    }));
+    const rows = allCases.map((tc) => {
+      const meta = cardMeta[tc.id];
+      return {
+        ID: tc.id,
+        Category: tc.category,
+        Title: tc.title,
+        Priority: tc.priority,
+        Severity: tc.severity,
+        Steps: tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
+        "Expected Result": tc.expected,
+        Validity: meta?.validity === "valid" ? "Valid" : meta?.validity === "invalid" ? "Not Valid" : "",
+        Feedback: meta?.feedback || "",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 50 }];
+    ws["!cols"] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 50 }, { wch: 12 }, { wch: 40 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
     XLSX.writeFile(wb, "test-cases.xlsx");
