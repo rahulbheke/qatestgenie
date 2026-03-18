@@ -42,6 +42,14 @@ export function formatAllTestCases(results: GeneratedTests): string {
     .join("\n\n");
 }
 
+export function mergeGeneratedTests(results: GeneratedTests[]): GeneratedTests {
+  return {
+    positive: results.flatMap((r) => r.positive),
+    negative: results.flatMap((r) => r.negative),
+    edge: results.flatMap((r) => r.edge),
+  };
+}
+
 export function generateTestCases(feature: string): GeneratedTests {
   const positive: TestCase[] = [
     {

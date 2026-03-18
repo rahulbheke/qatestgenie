@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import TestCaseColumn from "@/components/TestCaseColumn";
-import { generateTestCases, formatAllTestCases, type GeneratedTests } from "@/lib/generateTestCases";
-import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet } from "lucide-react";
+import { generateTestCases, formatAllTestCases, mergeGeneratedTests, type GeneratedTests } from "@/lib/generateTestCases";
+import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet, Upload, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 const legend = [
@@ -17,10 +17,53 @@ const Index = () => {
   const [results, setResults] = useState<GeneratedTests | null>(null);
   const [allCopied, setAllCopied] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [uploadedFeatures, setUploadedFeatures] = useState<string[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = () => {
-    if (!feature.trim()) return;
-    setResults(generateTestCases(feature));
+    const manualFeatures = feature.trim() ? [feature.trim()] : [];
+    const allFeatures = [...manualFeatures, ...uploadedFeatures];
+    if (allFeatures.length === 0) return;
+
+    const allResults = allFeatures.map((f) => generateTestCases(f));
+    setResults(mergeGeneratedTests(allResults));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet);
+
+      // Look for a column that contains features/requirements
+      const featureKeys = Object.keys(rows[0] || {});
+      const key =
+        featureKeys.find((k) =>
+          /feature|requirement|description|title|name|story/i.test(k)
+        ) || featureKeys[0];
+
+      if (key) {
+        const features = rows
+          .map((row) => String(row[key] || "").trim())
+          .filter(Boolean);
+        setUploadedFeatures(features);
+        setFileName(file.name);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    // Reset input so the same file can be re-uploaded
+    e.target.value = "";
+  };
+
+  const handleClearFile = () => {
+    setUploadedFeatures([]);
+    setFileName(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -80,7 +123,7 @@ const Index = () => {
           Describe a feature and get structured positive, negative, and edge-case scenarios instantly.
         </p>
 
-        <div className="text-left">
+        <div className="text-left space-y-4">
           <textarea
             value={feature}
             onChange={(e) => setFeature(e.target.value)}
@@ -88,9 +131,41 @@ const Index = () => {
             placeholder="e.g. User registration with email and password"
             className="w-full min-h-[120px] rounded-lg border border-input bg-card p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary/50 resize-y font-mono-code transition-all"
           />
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 gap-3">
+
+          {/* File upload area */}
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            {fileName ? (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-primary/30 bg-primary/5">
+                <FileSpreadsheet className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{fileName}</p>
+                  <p className="text-xs text-muted-foreground">{uploadedFeatures.length} feature{uploadedFeatures.length !== 1 ? "s" : ""} found</p>
+                </div>
+                <button onClick={handleClearFile} className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-dashed border-border hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground transition-all text-sm"
+              >
+                <Upload className="h-4 w-4" />
+                Upload Excel/CSV with features
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground hidden sm:inline">⌘ + Enter to generate</span>
-            <Button variant="action" size="lg" onClick={handleGenerate} disabled={!feature.trim()} className="w-full sm:w-auto">
+            <Button variant="action" size="lg" onClick={handleGenerate} disabled={!feature.trim() && uploadedFeatures.length === 0} className="w-full sm:w-auto">
               Generate Test Cases
             </Button>
           </div>
