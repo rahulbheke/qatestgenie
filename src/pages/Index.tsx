@@ -114,10 +114,16 @@ const Index = () => {
                   Legend
                 </button>
               </div>
-              <Button variant="outline" size="sm" onClick={handleCopyAll} className="gap-1.5">
-                {allCopied ? <Check className="h-3.5 w-3.5 text-positive" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
-                {allCopied ? "Copied!" : "Copy All"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  Export Excel
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCopyAll} className="gap-1.5">
+                  {allCopied ? <Check className="h-3.5 w-3.5 text-positive" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+                  {allCopied ? "Copied!" : "Copy All"}
+                </Button>
+              </div>
             </div>
 
             {/* Legend */}
