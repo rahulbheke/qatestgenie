@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import TestCaseColumn from "@/components/TestCaseColumn";
 import { generateTestCases, formatAllTestCases, type GeneratedTests } from "@/lib/generateTestCases";
-import { FlaskConical, Sparkles, ClipboardCopy, Check, Info } from "lucide-react";
+import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 
 const legend = [
   { label: "P0 / Critical", color: "bg-destructive", desc: "Must test — blocks release" },
