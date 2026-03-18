@@ -176,10 +176,17 @@ const Index = () => {
             ) : (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-dashed border-border hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground transition-all text-sm"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={`flex items-center justify-center gap-2 px-4 py-6 rounded-lg border-2 border-dashed transition-all text-sm ${
+                  isDragging
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                }`}
               >
                 <Upload className="h-4 w-4" />
-                Upload Excel/CSV with features
+                {isDragging ? "Drop your file here" : "Drag & drop or click to upload Excel/CSV"}
               </button>
             )}
           </div>
