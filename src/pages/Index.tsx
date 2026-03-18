@@ -19,6 +19,7 @@ const Index = () => {
   const [showLegend, setShowLegend] = useState(false);
   const [uploadedFeatures, setUploadedFeatures] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = () => {
@@ -30,10 +31,7 @@ const Index = () => {
     setResults(mergeGeneratedTests(allResults));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       const data = new Uint8Array(evt.target?.result as ArrayBuffer);
@@ -41,7 +39,6 @@ const Index = () => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet);
 
-      // Look for a column that contains features/requirements
       const featureKeys = Object.keys(rows[0] || {});
       const key =
         featureKeys.find((k) =>
@@ -57,8 +54,32 @@ const Index = () => {
       }
     };
     reader.readAsArrayBuffer(file);
-    // Reset input so the same file can be re-uploaded
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
     e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && /\.(xlsx|xls|csv)$/i.test(file.name)) {
+      processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleClearFile = () => {
@@ -155,10 +176,17 @@ const Index = () => {
             ) : (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-dashed border-border hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground transition-all text-sm"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={`flex items-center justify-center gap-2 px-4 py-6 rounded-lg border-2 border-dashed transition-all text-sm ${
+                  isDragging
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                }`}
               >
                 <Upload className="h-4 w-4" />
-                Upload Excel/CSV with features
+                {isDragging ? "Drop your file here" : "Drag & drop or click to upload Excel/CSV"}
               </button>
             )}
           </div>
