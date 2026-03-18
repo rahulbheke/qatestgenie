@@ -12,6 +12,12 @@ const legend = [
   { label: "P3 / Low", color: "bg-muted-foreground", desc: "Optional — minimal impact" },
 ];
 
+export type Validity = "valid" | "invalid" | null;
+export interface CardMeta {
+  validity: Validity;
+  feedback: string;
+}
+
 const Index = () => {
   const [feature, setFeature] = useState("");
   const [results, setResults] = useState<GeneratedTests | null>(null);
@@ -20,7 +26,15 @@ const Index = () => {
   const [uploadedFeatures, setUploadedFeatures] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [cardMeta, setCardMeta] = useState<Record<string, CardMeta>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const updateCardMeta = (id: string, update: Partial<CardMeta>) => {
+    setCardMeta((prev) => ({
+      ...prev,
+      [id]: { validity: null, feedback: "", ...prev[id], ...update },
+    }));
+  };
 
   const handleGenerate = () => {
     const manualFeatures = feature.trim() ? [feature.trim()] : [];
@@ -107,17 +121,22 @@ const Index = () => {
       ...results.negative.map((tc) => ({ ...tc, category: "Error Handling" })),
       ...results.edge.map((tc) => ({ ...tc, category: "Boundary" })),
     ];
-    const rows = allCases.map((tc) => ({
-      ID: tc.id,
-      Category: tc.category,
-      Title: tc.title,
-      Priority: tc.priority,
-      Severity: tc.severity,
-      Steps: tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
-      "Expected Result": tc.expected,
-    }));
+    const rows = allCases.map((tc) => {
+      const meta = cardMeta[tc.id];
+      return {
+        ID: tc.id,
+        Category: tc.category,
+        Title: tc.title,
+        Priority: tc.priority,
+        Severity: tc.severity,
+        Steps: tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
+        "Expected Result": tc.expected,
+        Validity: meta?.validity === "valid" ? "Valid" : meta?.validity === "invalid" ? "Not Valid" : "",
+        Feedback: meta?.feedback || "",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 50 }];
+    ws["!cols"] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 50 }, { wch: 12 }, { wch: 40 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
     XLSX.writeFile(wb, "test-cases.xlsx");
@@ -251,9 +270,9 @@ const Index = () => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <TestCaseColumn title="Happy Path" type="positive" cases={results.positive} />
-              <TestCaseColumn title="Error Handling" type="negative" cases={results.negative} />
-              <TestCaseColumn title="Boundary" type="edge" cases={results.edge} />
+              <TestCaseColumn title="Happy Path" type="positive" cases={results.positive} cardMeta={cardMeta} onUpdateMeta={updateCardMeta} />
+              <TestCaseColumn title="Error Handling" type="negative" cases={results.negative} cardMeta={cardMeta} onUpdateMeta={updateCardMeta} />
+              <TestCaseColumn title="Boundary" type="edge" cases={results.edge} cardMeta={cardMeta} onUpdateMeta={updateCardMeta} />
             </div>
           </div>
         </section>

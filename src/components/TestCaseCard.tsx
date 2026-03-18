@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Copy, Check, ThumbsUp, ThumbsDown, MessageSquare, X } from "lucide-react";
+import { Copy, Check, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import type { TestCase } from "@/lib/generateTestCases";
+import type { CardMeta } from "@/pages/Index";
 import { formatTestCase } from "@/lib/generateTestCases";
 import { cn } from "@/lib/utils";
 
 interface TestCaseCardProps {
   testCase: TestCase;
   index: number;
+  meta: CardMeta;
+  onUpdateMeta: (update: Partial<CardMeta>) => void;
 }
 
 const severityStyles: Record<string, string> = {
@@ -16,12 +19,10 @@ const severityStyles: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
-const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
+const TestCaseCard = ({ testCase, index, meta, onUpdateMeta }: TestCaseCardProps) => {
   const [copied, setCopied] = useState(false);
-  const [validity, setValidity] = useState<"valid" | "invalid" | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedback, setFeedback] = useState("");
-  const [feedbackSaved, setFeedbackSaved] = useState(false);
+  const [feedbackDraft, setFeedbackDraft] = useState(meta.feedback);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(formatTestCase(testCase));
@@ -30,15 +31,15 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
   };
 
   const handleSaveFeedback = () => {
-    if (!feedback.trim()) return;
-    setFeedbackSaved(true);
+    if (!feedbackDraft.trim()) return;
+    onUpdateMeta({ feedback: feedbackDraft.trim() });
     setShowFeedback(false);
   };
 
   const borderByValidity =
-    validity === "valid"
+    meta.validity === "valid"
       ? "border-positive/40"
-      : validity === "invalid"
+      : meta.validity === "invalid"
         ? "border-destructive/40"
         : "border-border";
 
@@ -51,11 +52,11 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* Validity ribbon */}
-      {validity && (
+      {meta.validity && (
         <div
           className={cn(
             "absolute top-0 left-0 right-0 h-0.5 rounded-t-lg",
-            validity === "valid" ? "bg-positive" : "bg-destructive"
+            meta.validity === "valid" ? "bg-positive" : "bg-destructive"
           )}
         />
       )}
@@ -112,10 +113,10 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
       {/* Actions bar */}
       <div className="flex items-center gap-1 pt-3 border-t border-border">
         <button
-          onClick={() => setValidity(validity === "valid" ? null : "valid")}
+          onClick={() => onUpdateMeta({ validity: meta.validity === "valid" ? null : "valid" })}
           className={cn(
             "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
-            validity === "valid"
+            meta.validity === "valid"
               ? "bg-positive/15 text-positive"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           )}
@@ -125,10 +126,10 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
           Valid
         </button>
         <button
-          onClick={() => setValidity(validity === "invalid" ? null : "invalid")}
+          onClick={() => onUpdateMeta({ validity: meta.validity === "invalid" ? null : "invalid" })}
           className={cn(
             "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
-            validity === "invalid"
+            meta.validity === "invalid"
               ? "bg-destructive/15 text-destructive"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           )}
@@ -142,14 +143,14 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
           onClick={() => setShowFeedback(!showFeedback)}
           className={cn(
             "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
-            feedbackSaved
+            meta.feedback
               ? "text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           )}
           title="Add feedback"
         >
           <MessageSquare className="h-3 w-3" />
-          {feedbackSaved ? "Feedback added" : "Feedback"}
+          {meta.feedback ? "Feedback added" : "Feedback"}
         </button>
       </div>
 
@@ -157,8 +158,8 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
       {showFeedback && (
         <div className="mt-3 space-y-2 animate-fade-slide-up" style={{ animationDelay: "0ms" }}>
           <textarea
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
+            value={feedbackDraft}
+            onChange={(e) => setFeedbackDraft(e.target.value)}
             placeholder="Describe what's wrong or suggest improvements…"
             className="w-full min-h-[72px] rounded-md border border-input bg-background p-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/50 resize-y font-mono-code"
           />
@@ -171,7 +172,7 @@ const TestCaseCard = ({ testCase, index }: TestCaseCardProps) => {
             </button>
             <button
               onClick={handleSaveFeedback}
-              disabled={!feedback.trim()}
+              disabled={!feedbackDraft.trim()}
               className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               Save Feedback
