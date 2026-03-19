@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { FlaskConical, Sparkles, Sun, Moon } from "lucide-react";
+import { FlaskConical, Sparkles, Sun, Moon, TestTubes } from "lucide-react";
+import { Link } from "react-router-dom";
 import StrategyInputForm from "@/components/StrategyInputForm";
 import StrategyOutput from "@/components/StrategyOutput";
 import { generateStrategy, type StrategyResult, type AppType, type TestingType } from "@/lib/generateStrategy";
@@ -37,13 +38,22 @@ const Simulator = () => {
             </div>
             <h1 className="text-base font-semibold text-heading tracking-tight">Test Automation Simulator</h1>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/testgen"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <TestTubes className="h-3.5 w-3.5" />
+              TestGen
+            </Link>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </header>
 

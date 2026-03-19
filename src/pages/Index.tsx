@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import TestCaseColumn from "@/components/TestCaseColumn";
 import { generateTestCases, formatAllTestCases, mergeGeneratedTests, type GeneratedTests } from "@/lib/generateTestCases";
-import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet, Upload, X } from "lucide-react";
+import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet, Upload, X, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 
 const legend = [
@@ -145,11 +146,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container max-w-6xl py-4 flex items-center gap-2.5 px-4 sm:px-6">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-            <FlaskConical className="h-4 w-4 text-primary" />
+        <div className="container max-w-6xl py-4 flex items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+              <FlaskConical className="h-4 w-4 text-primary" />
+            </div>
+            <h1 className="text-base font-semibold text-heading tracking-tight">TestGen</h1>
           </div>
-          <h1 className="text-base font-semibold text-heading tracking-tight">TestGen</h1>
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Simulator
+          </Link>
         </div>
       </header>
 
