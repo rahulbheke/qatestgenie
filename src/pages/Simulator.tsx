@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { FlaskConical, Sparkles, Sun, Moon } from "lucide-react";
+import { FlaskConical, Sparkles, Sun, Moon, TestTubes } from "lucide-react";
+import { Link } from "react-router-dom";
 import StrategyInputForm from "@/components/StrategyInputForm";
 import StrategyOutput from "@/components/StrategyOutput";
 import { generateStrategy, type StrategyResult, type AppType, type TestingType } from "@/lib/generateStrategy";
