@@ -26,6 +26,8 @@ const STEPS = [
 
 export default function BillSplitter() {
   const [data, setData] = useState<BillData>(() => loadFromStorage() || { participants: [], expenses: [], currency: "₹" });
+
+  useEffect(() => { document.title = "Smart Split – Bill Splitter"; }, []);
   const [step, setStep] = useState(0);
   const [isDark, setIsDark] = useState(!document.documentElement.classList.contains("light"));
 
