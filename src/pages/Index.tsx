@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import TestCaseColumn from "@/components/TestCaseColumn";
 import { generateTestCases, formatAllTestCases, mergeGeneratedTests, type GeneratedTests } from "@/lib/generateTestCases";
-import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet, Upload, X, ArrowLeft } from "lucide-react";
+import { FlaskConical, Sparkles, ClipboardCopy, Check, Info, FileSpreadsheet, Upload, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 const legend = [
